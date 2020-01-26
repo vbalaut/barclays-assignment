@@ -7,6 +7,8 @@ Code Assumption
  - Not 100% test coverage. I would prefer tdd approach but due to time constraints need to change the approach
  
  - Need improvement in unit testing.
+ 
+ - There is no Java Doc. This needs to add.
 ```
 ## (SQL Question) Mobile Banking Analysis
 ### 1. Count the number of new accounts opened per day by people based in London.

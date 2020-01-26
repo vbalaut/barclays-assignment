@@ -4,8 +4,9 @@ Code Assumption
 ```
  - Code is not thread safe
 
- - not 100% test coverage. I would prefer tdd approach but due to time constraints need to change the approach
-
+ - Not 100% test coverage. I would prefer tdd approach but due to time constraints need to change the approach
+ 
+ - Need improvement in unit testing.
 ```
 ## (SQL Question) Mobile Banking Analysis
 ### 1. Count the number of new accounts opened per day by people based in London.

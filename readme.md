@@ -2,6 +2,8 @@
 ## (Coding Question) Bank Balance Sheet Application
 Code Assumption
 ```
+ - Class which is implementing requirement is BalancesheetApplicationTests.java
+ 
  - Code is not thread safe
 
  - Not 100% test coverage. I would prefer tdd approach but due to time constraints need to change the approach

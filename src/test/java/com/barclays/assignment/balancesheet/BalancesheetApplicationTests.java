@@ -2,7 +2,9 @@ package com.barclays.assignment.balancesheet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -18,6 +20,7 @@ import com.barclays.assignment.balancesheet.product.ProductClassification;
 
 class BalancesheetApplicationTests {
 
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#0.0000");
 	BankBalanceSheetUtility bankBalanceSheetUtility = new BankBalanceSheetUtility();
 	private static BalanceSheet balanceSheet = null;
 	static double expectedNetWorthSRWA = 0;
@@ -35,13 +38,11 @@ class BalancesheetApplicationTests {
 		Product tier1Product = new Product(ProductClassification.TIER_1_CAPITAL, Currency.GBP, 10000000d);
 		balanceSheetBuilder.addAccount(
 				AccountBuilder.builder().setAccountType(AccountType.INTERNAL).setProduct(tier1Product).build());
-
-		// b. An Internal account holding 10 Collateralised loans each one of an amount
-		// between
-		// 100,000 and 200,000 GBP.
 		expectedNetWorth += tier1Product.getAmount();
 		expectedNetWorthSRWA += calculateSRVA(tier1Product.getAmount(), ProductClassification.TIER_1_CAPITAL);
 
+		// b. An Internal account holding 10 Collateralised loans each one of an amount
+		// between 100,000 and 200,000 GBP.
 		AccountBuilder internalAccountHolding10CollateralisedLoan = AccountBuilder.builder()
 				.setAccountType(AccountType.INTERNAL);
 		IntStream.range(1, 11)
@@ -52,7 +53,9 @@ class BalancesheetApplicationTests {
 		balanceSheetBuilder.addAccount(account2);
 		double aggregatedLoanAmount = account2.getProducts().stream().mapToDouble(IProduct::getAmount).sum();
 		expectedNetWorth -= aggregatedLoanAmount;
-		expectedNetWorthSRWA += calculateSRVA(aggregatedLoanAmount, ProductClassification.COLLATERALISED_LOAN);
+		expectedNetWorthSRWA += account2.getProducts().stream().mapToDouble(extracted()).sum();
+		// expectedNetWorthSRWA += calculateSRVA(aggregatedLoanAmount,
+		// ProductClassification.COLLATERALISED_LOAN);
 
 		// c. 10 Wholesale accounts, each holding a cash product of value between 10,000
 		// and
@@ -69,18 +72,18 @@ class BalancesheetApplicationTests {
 
 		balanceSheetBuilder.addAccount(account3);
 		expectedNetWorth += account3.getProducts().stream().mapToDouble(IProduct::getAmount).sum();
-		
-		double aggregatedCashAmount = account3.getProducts().stream()
-				.filter(t -> t.getProductClassficiation() == ProductClassification.CASH)
-				.mapToDouble(IProduct::getAmount).sum();
-		double aggregatedBondAmount = account3.getProducts().stream()
-				.filter(t -> t.getProductClassficiation() == ProductClassification.BOND)
-				.mapToDouble(IProduct::getAmount).sum();
-		
-		expectedNetWorthSRWA += calculateSRVA(aggregatedCashAmount, ProductClassification.CASH);
-		expectedNetWorthSRWA += calculateSRVA(aggregatedBondAmount, ProductClassification.BOND);
+
+		expectedNetWorthSRWA += account3.getProducts().stream()
+				.filter(t -> t.getProductClassficiation() == ProductClassification.CASH).mapToDouble(extracted()).sum();
+		expectedNetWorthSRWA += account3.getProducts().stream()
+				.filter(t -> t.getProductClassficiation() == ProductClassification.BOND).mapToDouble(extracted()).sum();
 
 		return balanceSheetBuilder.build();
+	}
+
+	private static ToDoubleFunction<? super IProduct> extracted() {
+		return value -> value.getAmount()
+				- ((value.getProductClassficiation().getRiskRating() * 0.05) * value.getAmount());
 	}
 
 	private static double calculateSRVA(double amount, ProductClassification productClassification) {
@@ -90,13 +93,13 @@ class BalancesheetApplicationTests {
 	@Test
 	public void reusableMethodWhichCalculatesTheBanksNetWorthValue() {
 		double netWorth = bankBalanceSheetUtility.calculateNetWorth(balanceSheet);
-		assertEquals(expectedNetWorth, netWorth);
+		assertEquals(DECIMAL_FORMAT.format(expectedNetWorth), DECIMAL_FORMAT.format(netWorth));
 	}
 
 	@Test
 	public void reusableMethodWhicCalculatesTheBanksNetWorthGBPValueUsingSRWA() {
 		// SRWA(value, rating) = value – ((rating*0.05)*value)
 		double netWorth = bankBalanceSheetUtility.calculateNetWorthUsingSRWA(balanceSheet);
-		assertEquals(expectedNetWorthSRWA, netWorth);
+		assertEquals(DECIMAL_FORMAT.format(expectedNetWorthSRWA), DECIMAL_FORMAT.format(netWorth));
 	}
 }

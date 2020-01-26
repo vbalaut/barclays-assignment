@@ -53,7 +53,7 @@ public final class Account implements IAccount {
 	@Override
 	public double totalWorthBySRWA() {
 		return products.stream().mapToDouble(value -> value.getAmount()
-				- ((value.getProductClassficiation().getRiskRating() * 0.005) * value.getAmount())).sum();
+				- ((value.getProductClassficiation().getRiskRating() * 0.05) * value.getAmount())).sum();
 
 	}
 
